@@ -1,50 +1,60 @@
 package com.project.back_end.services;
 
-import com.project.back_end.models.Appointment;
+import com.project.back_end.entities.Appointment;
+import com.project.back_end.repositories.AppointmentRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class AppointmentService {
 
-    // Temporary in-memory list (replace with Repository later)
-    private List<Appointment> appointmentList = new ArrayList<>();
+    private final AppointmentRepository appointmentRepository;
 
-    // Create appointment
-    public String createAppointment(Appointment appointment) {
-        appointmentList.add(appointment);
-        return "Appointment created successfully";
+    public AppointmentService(AppointmentRepository appointmentRepository) {
+        this.appointmentRepository = appointmentRepository;
     }
 
-    // Get all appointments
+    /* -------------------- CREATE -------------------- */
+
+    /**
+     * Saves a new appointment using the repository
+     */
+    public Appointment createAppointment(Appointment appointment) {
+        return appointmentRepository.save(appointment);
+    }
+
+    /* -------------------- READ -------------------- */
+
     public List<Appointment> getAllAppointments() {
-        return appointmentList;
+        return appointmentRepository.findAll();
     }
 
-    // Get appointment by ID
-    public Appointment getAppointmentById(int id) {
-        return appointmentList.stream()
-                .filter(app -> app.getAppointmentId() == id)
-                .findFirst()
-                .orElse(null);
+    public Optional<Appointment> getAppointmentById(Long id) {
+        return appointmentRepository.findById(id);
     }
 
-    // Update appointment status
-    public String updateAppointmentStatus(int id, String status) {
-        for (Appointment appointment : appointmentList) {
-            if (appointment.getAppointmentId() == id) {
-                appointment.setStatus(status);
-                return "Appointment updated successfully";
-            }
+    /* -------------------- UPDATE -------------------- */
+
+    public Appointment updateAppointment(Long id, Appointment updatedAppointment) {
+        return appointmentRepository.findById(id)
+                .map(existing -> {
+                    existing.setDoctor(updatedAppointment.getDoctor());
+                    existing.setPatient(updatedAppointment.getPatient());
+                    existing.setAppointmentTime(updatedAppointment.getAppointmentTime());
+                    existing.setStatus(updatedAppointment.getStatus());
+                    return appointmentRepository.save(existing);
+                })
+                .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + id));
+    }
+
+    /* -------------------- DELETE -------------------- */
+
+    public void deleteAppointment(Long id) {
+        if (!appointmentRepository.existsById(id)) {
+            throw new RuntimeException("Appointment not found with id: " + id);
         }
-        return "Appointment not found";
-    }
-
-    // Delete appointment
-    public String deleteAppointment(int id) {
-        boolean removed = appointmentList.removeIf(app -> app.getAppointmentId() == id);
-        return removed ? "Appointment deleted successfully" : "Appointment not found";
+        appointmentRepository.deleteById(id);
     }
 }
