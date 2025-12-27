@@ -1,70 +1,70 @@
-package com.project.back_end.models;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.NotNull;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
+@Entity
+@Table(name = "appointments")
 public class Appointment {
 
-    private int appointmentId;
-    private int doctorId;
-    private int patientId;
-    private LocalDate appointmentDate;
-    private LocalTime appointmentTime;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    /* Relationship with Doctor */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "doctor_id", nullable = false)
+    @NotNull
+    private Doctor doctor;
+
+    /* Relationship with Patient */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "patient_id", nullable = false)
+    @NotNull
+    private Patient patient;
+
+    @NotNull
+    @Future
+    private LocalDateTime appointmentTime;
+
     private String status;
 
-    // No-argument constructor
     public Appointment() {
     }
 
-    // Parameterized constructor
-    public Appointment(int appointmentId, int doctorId, int patientId,
-                       LocalDate appointmentDate, LocalTime appointmentTime, String status) {
-        this.appointmentId = appointmentId;
-        this.doctorId = doctorId;
-        this.patientId = patientId;
-        this.appointmentDate = appointmentDate;
+    public Appointment(Doctor doctor, Patient patient, LocalDateTime appointmentTime, String status) {
+        this.doctor = doctor;
+        this.patient = patient;
         this.appointmentTime = appointmentTime;
         this.status = status;
     }
 
-    // Getters and Setters
-    public int getAppointmentId() {
-        return appointmentId;
+    public Long getId() {
+        return id;
     }
 
-    public void setAppointmentId(int appointmentId) {
-        this.appointmentId = appointmentId;
+    public Doctor getDoctor() {
+        return doctor;
     }
 
-    public int getDoctorId() {
-        return doctorId;
+    public void setDoctor(Doctor doctor) {
+        this.doctor = doctor;
     }
 
-    public void setDoctorId(int doctorId) {
-        this.doctorId = doctorId;
+    public Patient getPatient() {
+        return patient;
     }
 
-    public int getPatientId() {
-        return patientId;
+    public void setPatient(Patient patient) {
+        this.patient = patient;
     }
 
-    public void setPatientId(int patientId) {
-        this.patientId = patientId;
-    }
-
-    public LocalDate getAppointmentDate() {
-        return appointmentDate;
-    }
-
-    public void setAppointmentDate(LocalDate appointmentDate) {
-        this.appointmentDate = appointmentDate;
-    }
-
-    public LocalTime getAppointmentTime() {
+    public LocalDateTime getAppointmentTime() {
         return appointmentTime;
     }
 
-    public void setAppointmentTime(LocalTime appointmentTime) {
+    public void setAppointmentTime(LocalDateTime appointmentTime) {
         this.appointmentTime = appointmentTime;
     }
 
@@ -79,10 +79,9 @@ public class Appointment {
     @Override
     public String toString() {
         return "Appointment{" +
-                "appointmentId=" + appointmentId +
-                ", doctorId=" + doctorId +
-                ", patientId=" + patientId +
-                ", appointmentDate=" + appointmentDate +
+                "id=" + id +
+                ", doctor=" + (doctor != null ? doctor.getId() : null) +
+                ", patient=" + (patient != null ? patient.getId() : null) +
                 ", appointmentTime=" + appointmentTime +
                 ", status='" + status + '\'' +
                 '}';
