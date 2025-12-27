@@ -1,12 +1,19 @@
 package com.project.back_end.models;
-
+@Entity
+@Table(name = "doctors")
 public class Doctor {
 
-    private int doctorId;
-    private int userId;
-    private String name;
-    private String specialization;
-    private String phone;
+    @Id
+@GeneratedValue(strategy = GenerationType.IDENTITY)
+private Long id;
+
+private Long userId;
+
+private String name;
+
+private String specialization;
+
+private String phone;
 
     // No-argument constructor
     public Doctor() {
