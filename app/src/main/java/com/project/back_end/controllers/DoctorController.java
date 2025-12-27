@@ -1,58 +1,71 @@
 package com.project.back_end.controllers;
 
-import com.project.back_end.models.Doctor;
+import com.project.back_end.entities.Doctor;
+import com.project.back_end.services.DoctorService;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/doctors")
 public class DoctorController {
 
-    // Temporary in-memory list (can be replaced with Service + Repository)
-    private List<Doctor> doctorList = new ArrayList<>();
+    private final DoctorService doctorService;
 
-    // Add a new doctor
-    @PostMapping("/add")
-    public String addDoctor(@RequestBody Doctor doctor) {
-        doctorList.add(doctor);
-        return "Doctor added successfully";
+    public DoctorController(DoctorService doctorService) {
+        this.doctorService = doctorService;
     }
 
-    // Get all doctors
-    @GetMapping("/all")
-    public List<Doctor> getAllDoctors() {
-        return doctorList;
+    /* -------------------- CRUD -------------------- */
+
+    @GetMapping
+    public ResponseEntity<List<Doctor>> getAllDoctors() {
+        return ResponseEntity.ok(doctorService.getAllDoctors());
     }
 
-    // Get doctor by ID
     @GetMapping("/{id}")
-    public Doctor getDoctorById(@PathVariable int id) {
-        return doctorList.stream()
-                .filter(doc -> doc.getDoctorId() == id)
-                .findFirst()
-                .orElse(null);
+    public ResponseEntity<Doctor> getDoctorById(@PathVariable Long id) {
+        return doctorService.getDoctorById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    // Update doctor details
-    @PutMapping("/update/{id}")
-    public String updateDoctor(@PathVariable int id, @RequestBody Doctor updatedDoctor) {
-        for (Doctor doctor : doctorList) {
-            if (doctor.getDoctorId() == id) {
-                doctor.setName(updatedDoctor.getName());
-                doctor.setSpecialization(updatedDoctor.getSpecialization());
-                doctor.setPhone(updatedDoctor.getPhone());
-                return "Doctor updated successfully";
-            }
-        }
-        return "Doctor not found";
+    @PostMapping
+    public ResponseEntity<Doctor> createDoctor(@RequestBody Doctor doctor) {
+        return new ResponseEntity<>(doctorService.saveDoctor(doctor), HttpStatus.CREATED);
     }
 
-    // Delete doctor
-    @DeleteMapping("/delete/{id}")
-    public String deleteDoctor(@PathVariable int id) {
-        doctorList.removeIf(doc -> doc.getDoctorId() == id);
-        return "Doctor deleted successfully";
+    @PutMapping("/{id}")
+    public ResponseEntity<Doctor> updateDoctor(@PathVariable Long id,
+                                               @RequestBody Doctor doctor) {
+        return ResponseEntity.ok(doctorService.updateDoctor(id, doctor));
     }
-}
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteDoctor(@PathVariable Long id) {
+        doctorService.deleteDoctor(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    /* -------------------- REQUIRED METHOD -------------------- */
+
+    /**
+     * Retrieve doctor availability based on:
+     * role, doctorId, date, and auth token
+     */
+    @GetMapping("/{doctorId}/availability")
+    public ResponseEntity<?> getDoctorAvailability(
+            @RequestHeader("Authorization") String token,
+            @RequestParam("role") String role,
+            @PathVariable Long doctorId,
+            @RequestParam("date")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+
+        // Basic token validation (placeholder)
+        if (!doctorService.isTokenValid(token, role)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid or unauthorized token");
